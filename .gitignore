@@ -1,0 +1,9 @@
+# Ignore dot files
+.*
+!.gitignore
+
+# Packer
+packer/*.pkrvars.hcl
+packer/packer_cache
+packer/plugins
+kickstart/ks.cfg

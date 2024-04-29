@@ -1,0 +1,8 @@
+# VCenter (ESXi) 
+vcenter_host = "esxi.example.com"
+vcenter_username = "root"
+vcenter_password = "MySecretP@ssw0rd"
+## datastore host
+host = "esxi.example.com"
+## port group to use for VM
+network = "VM Network"

@@ -1,0 +1,67 @@
+# System authorization information
+auth --enableshadow --passalgo=sha512
+# Automatically creates partitions
+autopart --type=lvm
+# System bootloader configuration
+bootloader --location=mbr
+# Partition clearing information
+clearpart --all --initlabel
+# Perform the installation in a completely non-interactive command line mode
+cmdline
+# Run the Setup Agent on first boot
+firstboot --enable
+# Use text install
+text
+# Skip X11 installation
+skipx
+# System language
+lang en_US.UTF-8
+# System timezone
+timezone Europe/Moscow --isUtc
+# Network information
+network --bootproto=dhcp --noipv6 --activate
+network --hostname=redos
+# System services
+services --enabled="vmtoolsd"
+services --enabled="ntpd"
+services --enabled="sshd"
+# Reboot after the installation is complete
+reboot --eject
+# Root password
+rootpw --lock --iscrypted #ROOT_PW#
+# Create user
+user --name=redos --uid=5000 --gid=5000 --groups=wheel --iscrypted --password=#REDOS_PW#
+sshkey --username redos "#REDOS_PUBKEY#"
+# Enable kernel dumps
+%addon com_redhat_kdump --enable --reserve-mb='auto'
+
+%end
+
+# Install packages
+%packages
+@base
+@core
+chrony
+conntrack
+ebtables
+ipset
+ipvsadm
+open-vm-tools
+openssh
+sed
+selinux-policy
+socat
+sudo
+%end
+
+# Setup anaconda
+%anaconda
+pwpolicy root --minlen=6 --minquality=50 --notstrict --nochanges --notempty
+pwpolicy user --minlen=6 --minquality=50 --notstrict --nochanges --notempty
+pwpolicy luks --minlen=6 --minquality=50 --notstrict --nochanges --notempty
+%end
+
+%post
+sed -i 's/#\?PermitRootLogin\s.*/PermitRootLogin no/' /etc/ssh/sshd_config
+echo "redos ALL=(ALL) NOPASSWD: ALL" >/etc/sudoers.d/redos
+%end
