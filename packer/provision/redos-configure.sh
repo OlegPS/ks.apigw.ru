@@ -1,11 +1,23 @@
 #!/usr/bin/env bash
 set -e
 
+# Disable swap
+sudo systemctl mask --now swap.target
+sudo swapoff -a
+sudo sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
+
 # Update
 sudo dnf update -y
 
+# Install additional packages
+sudo dnf install -y ethtool iproute-tc socat nfs-utils
+
 # Check sync time
 #ntpq -p
+
+# Enable ip_tables kernel module
+sudo modprobe ip_tables
+sudo sh -c 'echo "ip_tables" > /etc/modules-load.d/istio-ip_tables.conf'
 
 # Enable firewall
 
@@ -17,9 +29,6 @@ sudo dnf update -y
 #freshclam
 #systemctl enable clamav-freshclam
 #systemctl start clamav-freshclam
-
-# SELinux
-#dnf install selinux-policy
 
 # Add GOST ciphers
 #dnf install openssl-gost-engine

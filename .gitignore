@@ -6,4 +6,7 @@
 packer/*.pkrvars.hcl
 packer/packer_cache
 packer/plugins
-kickstart/ks.cfg
+
+# Kubesphere
+kk
+kubekey/

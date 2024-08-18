@@ -3,31 +3,21 @@ kind: Cluster
 metadata:
   name: sample
 spec:
-  hosts:
-  - {name: kube-master-1, address: 192.168.1.1, internalAddress: 192.168.1.1, user: redos, privateKeyPath: ".config/eddsa.key"}
-  - {name: kube-master-2, address: 192.168.1.2, internalAddress: 192.168.1.2, user: redos, privateKeyPath: ".config/eddsa.key"}
-  - {name: kube-master-3, address: 192.168.1.3, internalAddress: 192.168.1.3, user: redos, privateKeyPath: ".config/eddsa.key"}
-  - {name: kube-worker-1, address: 192.168.1.4, internalAddress: 192.168.1.4, user: redos, privateKeyPath: ".config/eddsa.key"}
-  - {name: kube-worker-2, address: 192.168.1.5, internalAddress: 192.168.1.5, user: redos, privateKeyPath: ".config/eddsa.key"}
-  - {name: kube-worker-3, address: 192.168.1.6, internalAddress: 192.168.1.6, user: redos, privateKeyPath: ".config/eddsa.key"}
-  roleGroups:
+  hosts: # Change me
+  - {name: kube-master-1, address: 1.2.3.4, internalAddress: 1.2.3.4, user: redos, privateKeyPath: ".ssh/eddsa.key"}
+  - {name: kube-worker-1, address: 1.2.3.4, internalAddress: 1.2.3.4, user: redos, privateKeyPath: ".ssh/eddsa.key"}
+  roleGroups: # Change me
     etcd:
     - kube-master-1
-    - kube-master-2
-    - kube-master-3
-    control-plane: 
+    control-plane:
     - kube-master-1
-    - kube-master-2
-    - kube-master-3
     worker:
     - kube-worker-1
-    - kube-worker-2
-    - kube-worker-3
   controlPlaneEndpoint:
-    externalDNS: true
     #internalLoadbalancer: kube-vip
-    domain: apiserver.example.com
-    address: "10.10.10.10"
+    externalDNS: true
+    domain: apiserver.example.com # Change me
+    address: 1.2.3.4  # Change me
     port: 6443
   system:
     ntpServers:
@@ -40,7 +30,7 @@ spec:
       - nfs-utils
     skipConfigureOS: false
   kubernetes:
-    version: v1.23.10
+    version: v1.26.15
     clusterName: cluster.local
     autoRenewCerts: true
     containerManager: containerd
@@ -55,7 +45,47 @@ spec:
     namespaceOverride: ""
     registryMirrors: []
     insecureRegistries: []
-  addons: []
+  addons:
+    - name: cert-manager
+      namespace: cert-manager
+      sources:
+        chart:
+          name: cert-manager
+          repo: https://charts.jetstack.io
+          values:
+            - crds.enabled=true
+            - prometheus.enabled=true
+            - prometheus.servicemonitor.enabled=true
+        yaml:
+          path:
+            - kubesphere/addons/cert-manager-issuers.yaml
+    - name: jaeger-operator
+      namespace: istio-system
+      sources:
+        chart:
+          name: jaeger-operator
+          repo: https://jaegertracing.github.io/helm-charts
+          values:
+            - image.tag=1.38.1 # Fix API kinds to match Kubernetes 1.26'
+            - rbac.clusterRole=true
+            - rbac.create=true # Fix 'cannot list namespaces'
+            - rbac.pspEnabled=false
+            - resources.limits.cpu=100m
+            - resources.limits.memory=128Mi
+            - resources.requests.cpu=20m
+            - resources.requests.memory=50Mi
+            - serviceAccount.create=true
+            - webhooks.mutatingWebhook.create=false
+            - webhooks.validatingWebhook.create=false
+    # - name: nfs-subdir-external-provisioner
+    #   namespace: kube-system
+    #   sources:
+    #     chart:
+    #       name: nfs-subdir-external-provisioner
+    #       repo: https://kubernetes-sigs.github.io/nfs-subdir-external-provisioner/
+    #       values:
+    #         - nfs.server=192.168.1.17
+    #         - nfs.path=/mnt/nfs
 ---
 apiVersion: installer.kubesphere.io/v1alpha1
 kind: ClusterConfiguration
@@ -72,7 +102,7 @@ spec:
   local_registry: ""
   # dev_tag: ""
   etcd:
-    monitoring: false
+    monitoring: true
     endpointIps: localhost
     port: 2379
     tlsEnable: true
@@ -144,7 +174,7 @@ spec:
       dashboard:
         enabled: false
   alerting:
-    enabled: false
+    enabled: true
     # thanosruler:
     #   replicas: 1
     #   resources: {}
@@ -172,13 +202,13 @@ spec:
       replicas: 2
     #   resources: {}
   logging:
-    enabled: false
+    enabled: true
     logsidecar:
       enabled: true
       replicas: 2
       # resources: {}
   metrics_server:
-    enabled: false
+    enabled: true
   monitoring:
     storageClass: ""
     node_exporter:
@@ -211,16 +241,16 @@ spec:
     clusterRole: none
   network:
     networkpolicy:
-      enabled: false
+      enabled: true
     ippool:
-      type: none
+      type: calico
     topology:
       type: none
   openpitrix:
     store:
       enabled: false
   servicemesh:
-    enabled: false
+    enabled: true
     istio:
       components:
         ingressGateways:
@@ -258,5 +288,3 @@ spec:
     #   resources: {}
   terminal:
     timeout: 600
-
-

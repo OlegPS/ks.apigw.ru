@@ -1,37 +1,48 @@
-# System authorization information
-auth --enableshadow --passalgo=sha512
 # Automatically creates partitions
-autopart --type=lvm
+autopart --type=lvm --fstype=ext4 --noswap
+
 # System bootloader configuration
-bootloader --location=mbr
+bootloader --location=mbr --boot-drive=sda
+
 # Partition clearing information
-clearpart --all --initlabel
-# Perform the installation in a completely non-interactive command line mode
-cmdline
-# Run the Setup Agent on first boot
-firstboot --enable
-# Use text install
-text
-# Skip X11 installation
-skipx
+clearpart --all --initlabel --disklabel=gpt
+
+# Don't run the Setup Agent on first boot
+firstboot --disable
+
 # System language
 lang en_US.UTF-8
-# System timezone
-timezone Europe/Moscow --isUtc
+
 # Network information
-network --bootproto=dhcp --noipv6 --activate
-network --hostname=redos
+network --bootproto=dhcp --device=ens160 --hostname=redos --noipv6 --activate
+
+# Reboot after the installation is complete
+reboot --eject
+
+# Root password
+rootpw --lock --iscrypted #ROOT_PW#
+
+# SELinux mode
+selinux --enforcing
+
 # System services
 services --enabled="vmtoolsd"
 services --enabled="ntpd"
 services --enabled="sshd"
-# Reboot after the installation is complete
-reboot --eject
-# Root password
-rootpw --lock --iscrypted #ROOT_PW#
+
+# Skip X11 installation
+skipx
+
+# System timezone
+timezone Europe/Moscow --utc
+
+# Use text install
+text --non-interactive
+
 # Create user
 user --name=redos --uid=5000 --gid=5000 --groups=wheel --iscrypted --password=#REDOS_PW#
 sshkey --username redos "#REDOS_PUBKEY#"
+
 # Enable kernel dumps
 %addon com_redhat_kdump --enable --reserve-mb='auto'
 
@@ -39,26 +50,17 @@ sshkey --username redos "#REDOS_PUBKEY#"
 
 # Install packages
 %packages
-@base
 @core
 chrony
 conntrack
 ebtables
+grub2-redos-theme
 ipset
-ipvsadm
 open-vm-tools
 openssh
 sed
 selinux-policy
-socat
 sudo
-%end
-
-# Setup anaconda
-%anaconda
-pwpolicy root --minlen=6 --minquality=50 --notstrict --nochanges --notempty
-pwpolicy user --minlen=6 --minquality=50 --notstrict --nochanges --notempty
-pwpolicy luks --minlen=6 --minquality=50 --notstrict --nochanges --notempty
 %end
 
 %post

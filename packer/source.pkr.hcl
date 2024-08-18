@@ -2,7 +2,7 @@
 # build blocks. A build block runs provisioner and post-processors on a
 # source. Read the documentation for source blocks here:
 # https://www.packer.io/docs/templates/hcl_templates/blocks/source
-source "vsphere-iso" "packer-redos7-x86_64" {
+source "vsphere-iso" "packer-redos-x86_64" {
   vcenter_server      = "${var.vcenter_host}"
   password            = "${var.vcenter_password}"
   username            = "${var.vcenter_username}"
@@ -10,10 +10,13 @@ source "vsphere-iso" "packer-redos7-x86_64" {
   host                = "${var.host}"
   firmware            = "efi"
   CPUs                = 2
+  cpu_cores           = 2
+  CPU_hot_plug        = true
   RAM                 = 4096
+  RAM_hot_plug        = true
   boot_command = [
     "c<wait>",
-    "linuxefi /images/pxeboot/vmlinuz inst.stage2=hd:LABEL=redos-DVD-x86_64-MUROM-7.3.3 inst.ks=hd:LABEL=kickstart inst.kdump_addon=off quiet<enter>",
+    "linuxefi /images/pxeboot/vmlinuz inst.ks=hd:LABEL=kickstart inst.kdump_addon=off quiet<enter>",
     "initrdefi /images/pxeboot/initrd.img<enter>",
     "boot<enter>"
   ]
@@ -21,8 +24,8 @@ source "vsphere-iso" "packer-redos7-x86_64" {
   guest_os_type = "otherLinux64Guest"
   cd_files      = ["./../.config/ks.cfg"]
   cd_label      = "kickstart"
-  iso_checksum  = "file:https://files.red-soft.ru/redos/7.3/x86_64/iso/redos-MUROM-7.3.3-20230815.0-Everything-x86_64-DVD1.iso.MD5SUM"
-  iso_urls      = ["./iso/redos-MUROM-7.3.3-20230815.0-Everything-x86_64-DVD1.iso", "https://files.red-soft.ru/redos/7.3/x86_64/iso/redos-MUROM-7.3.3-20230815.0-Everything-x86_64-DVD1.iso"]
+  iso_checksum  = "file:https://files.red-soft.ru/redos/8.0/x86_64/iso/redos-8-20240218.1-Everything-x86_64-DVD1.iso.MD5SUM"
+  iso_urls      = ["./iso/redos-8-20240218.1-Everything-x86_64-DVD1.iso", "https://files.red-soft.ru/redos/8.0/x86_64/iso/redos-8-20240218.1-Everything-x86_64-DVD1.iso"]
   storage {
     disk_size             = 40000
     disk_thin_provisioned = true
@@ -34,5 +37,5 @@ source "vsphere-iso" "packer-redos7-x86_64" {
   #shutdown_command = "sudo -S /usr/sbin/shutdown -h now"
   ssh_username         = "redos"
   ssh_private_key_file = "./../.config/eddsa.key"
-  vm_name              = "packer-redos7-x86_64"
+  vm_name              = "packer-redos-x86_64"
 }
